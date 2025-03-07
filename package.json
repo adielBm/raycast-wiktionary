@@ -17,6 +17,21 @@
       "subtitle": "Wiktionary",
       "description": "Look up a word or phrase using Wiktionary",
       "mode": "view"
+    },
+    {
+      "name": "full-page",
+      "title": "Full Page",
+      "subtitle": "Wiktionary",
+      "description": "Look up a word or phrase using Wiktionary in a full page view",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "title",
+          "placeholder": "Word / Phrase",
+          "type": "text",
+          "required": true
+        }
+      ]
     }
   ],
   "dependencies": {
