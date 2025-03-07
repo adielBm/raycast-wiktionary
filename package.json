@@ -1,33 +1,29 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "raycast-wiktionary",
-  "title": "raycast-wiktionary",
-  "description": "",
-  "icon": "wiktionary.png",
-  "author": "adielbm",
+  "name": "wiktionary",
+  "title": "Wiktionary Dictionary",
+  "description": "Look up a word or phrase using Wiktionary",
+  "icon": "icon.svg",
+  "author": "adielBm",
   "license": "MIT",
+  "categories": [
+    "Productivity",
+    "Documentation"
+  ],
   "commands": [
     {
-      "name": "wiktionary",
-      "icon": "wiktionary.png",
-      "title": "Wiktionary",
-      "subtitle": "Wiktionary Dictionary",
-      "description": "Defines the word via Wiktionary",
-      "mode": "view",
-      "arguments": [
-        {
-          "name": "title",
-          "placeholder": "Title",
-          "type": "text",
-          "required": true
-        }
-      ]
+      "name": "define",
+      "title": "Define",
+      "subtitle": "Wiktionary",
+      "description": "Look up a word or phrase using Wiktionary",
+      "mode": "view"
     }
   ],
   "dependencies": {
     "@raycast/api": "^1.93.0",
     "@raycast/utils": "^1.17.0",
     "@types/turndown": "^5.0.5",
+    "node-fetch": "^3.3.2",
     "turndown": "^7.2.0"
   },
   "devDependencies": {
