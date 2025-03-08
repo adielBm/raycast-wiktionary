@@ -3,8 +3,8 @@
   "name": "wiktionary",
   "title": "Wiktionary Dictionary",
   "description": "Look up a word or phrase using Wiktionary",
-  "icon": "icon.svg",
-  "author": "adielBm",
+  "icon": "icon.png",
+  "author": "adielbm",
   "license": "MIT",
   "categories": [
     "Productivity",

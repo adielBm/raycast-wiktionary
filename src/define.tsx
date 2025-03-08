@@ -3,15 +3,56 @@ import { useFetch } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import TurndownService from "turndown";
 import { List } from "@raycast/api";
-import fetch from 'node-fetch';
+import fetch from "node-fetch";
+
+interface Thumbnail {
+  mimetype: string;
+  width: number;
+  height: number;
+  duration: number | null;
+  url: string;
+}
+
+interface Page {
+  id: number;
+  key: string;
+  title: string;
+  excerpt: string;
+  matched_title: string | null;
+  description: string | null;
+  thumbnail: Thumbnail | null;
+}
+
+interface ParsedExample {
+  example: string;
+}
+
+// Represents a single definition object
+interface Definition {
+  definition: string;
+  parsedExamples?: ParsedExample[]; // Optional, as it’s not always present
+  examples?: string[]; // Optional, as it’s not always present
+}
+
+// Represents a language entry (e.g., English)
+interface LanguageEntry {
+  partOfSpeech: string;
+  language: string;
+  definitions: Definition[];
+}
+
+// Top-level structure
+interface DefinitionsRes {
+  [lang: string]: LanguageEntry[];
+}
 
 const HEADERS = { "User-Agent": "Raycast-Wiktionary-Extension" };
 
 export default function DefineSuggestions() {
   const [text, setText] = useState<string>("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Page[]>([]);
 
   const apiUrl = `https://en.wiktionary.org/w/rest.php/v1/search/title?q=${text}&limit=10`;
 
@@ -24,52 +65,39 @@ export default function DefineSuggestions() {
     setIsLoading(true);
     setError(null);
 
-    // Perform the fetch request
     fetch(apiUrl, {
-      headers: HEADERS
+      headers: HEADERS,
     })
       .then((response) => response.json())
-      .then((data: any) => {
-        setSuggestions(data?.pages || []); // Assuming the response has 'pages' key
+      .then((data) => {
+        const pages = (data as { pages?: Page[] }).pages || [];
+        setSuggestions(pages);
         setIsLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to load suggestions.");
         setIsLoading(false);
       });
   }, [text]);
 
   return (
-    <List
-      searchBarPlaceholder="Search Wiktionary"
-      onSearchTextChange={setText}
-      isLoading={isLoading}
-      throttle
-    >
+    <List searchBarPlaceholder="Search Wiktionary" onSearchTextChange={setText} isLoading={isLoading} throttle>
       {error && <List.Item title="Error" subtitle={error} />}
       {!error &&
         suggestions.map((page) => (
           <List.Item
-            // icon={{ source: page?.thumbnail?.url || "../assets/icon.svg" }}
-            icon={{ source: page?.thumbnail?.url ? 'https:' + page.thumbnail.url : "../assets/icon.svg" }}
+            icon={{ source: page?.thumbnail?.url ? "https:" + page.thumbnail.url : "../assets/icon.svg" }}
             id={page.id.toString()}
             key={page.id}
             title={page.title}
             actions={
               <ActionPanel>
-                <Action.Push
-                  icon={Icon.Eye}
-                  title="Show Definitions"
-                  target={<Define title={page.title} />}
-                />
+                <Action.Push icon={Icon.Eye} title="Show Definitions" target={<Define title={page.title} />} />
                 <Action.OpenInBrowser
                   title="Open in Wiktionary"
                   url={`https://en.wiktionary.org/wiki/${encodeURIComponent(page.title)}`}
                 />
-                <Action.CopyToClipboard
-                  title="Copy Title"
-                  content={page.title}
-                />
+                <Action.CopyToClipboard title="Copy Title" content={page.title} />
               </ActionPanel>
             }
           />
@@ -78,25 +106,22 @@ export default function DefineSuggestions() {
   );
 }
 
-
 export function Define({ title }: { title: string }) {
   const [content, setContent] = useState<string>("");
 
   const apiUrl = `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(title.trim())}`;
 
-  const { data: jsonData, isLoading, error } = useFetch(apiUrl, {
-    headers: HEADERS
+  const { data, isLoading, error } = useFetch(apiUrl, {
+    headers: HEADERS,
   });
 
   useEffect(() => {
-    if (!jsonData) return;
-
+    if (!data) return;
     try {
-      // Parse the API response
-      const apiData = jsonData as any;
+      const definitionsResponse = data as DefinitionsRes;
 
       // Check if English definitions exist
-      if (!apiData["en"] || apiData["en"].length === 0) {
+      if (!definitionsResponse["en"] || definitionsResponse["en"].length === 0) {
         setContent(`# No definition found for "${title}"`);
         return;
       }
@@ -113,7 +138,7 @@ export function Define({ title }: { title: string }) {
 
       let markdown = "";
 
-      apiData["en"].forEach((item: { partOfSpeech: string; definitions: any[] }) => {
+      definitionsResponse["en"].forEach((item) => {
         markdown += `\n## ${item.partOfSpeech}\n`;
 
         item.definitions.forEach((definition, index) => {
@@ -141,7 +166,7 @@ export function Define({ title }: { title: string }) {
       });
       setContent(`# Error\nCould not process definition for "${title}". Please try again later.`);
     }
-  }, [jsonData]);
+  }, [data]);
 
   if (isLoading) {
     return <Detail isLoading={true} markdown={`# Looking up "${title}"...\nFetching definitions from Wiktionary`} />;
