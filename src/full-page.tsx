@@ -33,8 +33,7 @@ export default function FullPage(props: { arguments: { title: string } }) {
           return content;
         },
       });
-      let markdown = td.turndown(apiData);
-
+      const markdown = td.turndown(apiData);
 
       setContent(markdown);
     } catch (err) {
